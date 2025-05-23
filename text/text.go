@@ -3,6 +3,7 @@ package text
 import (
 	"io"
 	"strings"
+	"unsafe"
 
 	"github.com/fatih/color"
 	"github.com/olekukonko/tablewriter"
@@ -59,7 +60,7 @@ func (t *Text) GetSymbolsName() []string {
 	return symStyleNames
 }
 
-func (t *Text) SetSymbols(symbolName string) {
+func (t *Text) SetSymbolsByName(symbolName string) {
 	for _, s := range symStyles {
 		if s.Name() == symbolName {
 			t.symbols = s
@@ -67,6 +68,28 @@ func (t *Text) SetSymbols(symbolName string) {
 		}
 	}
 	t.symbols = symStyles[0]
+}
+
+type SymbolCustom struct {
+	Name        string
+	Center      string
+	Row         string
+	Column      string
+	TopLeft     string
+	TopMid      string
+	TopRight    string
+	MidLeft     string
+	MidRight    string
+	BottomLeft  string
+	BottomMid   string
+	BottomRight string
+	HeaderLeft  string
+	HeaderMid   string
+	HeaderRight string
+}
+
+func (t *Text) SetSymbols(s *SymbolCustom) {
+	t.symbols = (*tw.SymbolCustom)(unsafe.Pointer(s))
 }
 
 func (t *Text) Flush() {

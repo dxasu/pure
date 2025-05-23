@@ -3,19 +3,6 @@ package text
 import "github.com/olekukonko/tablewriter/tw"
 
 var symStyles = []tw.Symbols{
-	tw.NewSymbolCustom("Empty").
-		WithRow("").
-		WithColumn(""). // Invisible column lines
-		WithTopLeft("").
-		WithTopMid("").
-		WithTopRight("").
-		WithMidLeft("").
-		WithCenter("").
-		WithMidRight("").
-		WithBottomLeft("").
-		WithBottomMid("").
-		WithBottomRight(""),
-
 	tw.NewSymbolCustom("Dotted").
 		WithRow("·").
 		WithColumn(":").
