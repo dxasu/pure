@@ -3,6 +3,7 @@ module github.com/dxasu/pure
 go 1.21
 
 require (
+	github.com/atotto/clipboard v0.1.4
 	github.com/fatih/color v1.15.0
 	github.com/olekukonko/tablewriter v1.0.6
 )

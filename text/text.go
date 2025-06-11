@@ -41,8 +41,7 @@ func NewText(w io.Writer, header bool, data any) *Text {
 	}
 
 	t := &Text{
-		symbols: symStyles[0],
-		w:       w,
+		w: w,
 	}
 	if header {
 		t.header = rows[0]
@@ -50,24 +49,6 @@ func NewText(w io.Writer, header bool, data any) *Text {
 	}
 	t.rows = rows
 	return t
-}
-
-func (t *Text) GetSymbolsName() []string {
-	var symStyleNames []string
-	for _, s := range symStyles {
-		symStyleNames = append(symStyleNames, s.Name())
-	}
-	return symStyleNames
-}
-
-func (t *Text) SetSymbolsByName(symbolName string) {
-	for _, s := range symStyles {
-		if s.Name() == symbolName {
-			t.symbols = s
-			return
-		}
-	}
-	t.symbols = symStyles[0]
 }
 
 type SymbolCustom struct {
