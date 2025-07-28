@@ -26,9 +26,6 @@ func (d *Data) GetInt(key string) int {
 		return 0
 	}
 	value := d.v.GetInt(key)
-	if value == 0 && !d.v.IsSet(key) {
-		return 0
-	}
 	return value
 }
 
