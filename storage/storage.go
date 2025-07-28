@@ -13,26 +13,23 @@ type Data struct {
 	v *viper.Viper
 }
 
-func (d *Data) GetString(key string) (string, error) {
+func (d *Data) GetString(key string) string {
 	if d.v == nil {
-		return "", fmt.Errorf("viper instance is nil")
+		return ""
 	}
 	value := d.v.GetString(key)
-	if value == "" && !d.v.IsSet(key) {
-		return "", fmt.Errorf("key %s not found", key)
-	}
-	return value, nil
+	return value
 }
 
-func (d *Data) GetInt(key string) (int, error) {
+func (d *Data) GetInt(key string) int {
 	if d.v == nil {
-		return 0, fmt.Errorf("viper instance is nil")
+		return 0
 	}
 	value := d.v.GetInt(key)
 	if value == 0 && !d.v.IsSet(key) {
-		return 0, fmt.Errorf("key %s not found", key)
+		return 0
 	}
-	return value, nil
+	return value
 }
 
 func (d *Data) Get(key string) (any, error) {
@@ -84,7 +81,7 @@ func NewData(name string) (*Data, error) {
 		if os.IsNotExist(err) {
 			// If the file does not exist, we can create a new viper instance
 			v := viper.New()
-			v.SetConfigName(filePath)
+			v.SetConfigFile(filePath)
 			v.AddConfigPath(tempDir)
 			return &Data{v: v}, nil
 		}
@@ -98,7 +95,9 @@ func NewData(name string) (*Data, error) {
 	}
 
 	v := viper.New()
+	v.SetConfigFile(filePath)
 	v.SetConfigType("json")
+
 	err = v.ReadConfig(bytes.NewBuffer(data))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse JSON from %s: %w", filePath, err)
