@@ -9,13 +9,16 @@ import (
 	"github.com/spf13/viper"
 )
 
+var ErrEmptyViper = fmt.Errorf("viper instance is nil")
+
 type Data struct {
-	v *viper.Viper
+	fp string
+	v  *viper.Viper
 }
 
 func (d *Data) GetString(key string) string {
 	if d.v == nil {
-		return ""
+		panic(ErrEmptyViper)
 	}
 	value := d.v.GetString(key)
 	return value
@@ -23,7 +26,7 @@ func (d *Data) GetString(key string) string {
 
 func (d *Data) GetInt(key string) int {
 	if d.v == nil {
-		return 0
+		panic(ErrEmptyViper)
 	}
 	value := d.v.GetInt(key)
 	return value
@@ -31,7 +34,7 @@ func (d *Data) GetInt(key string) int {
 
 func (d *Data) Get(key string) (any, error) {
 	if d.v == nil {
-		return nil, fmt.Errorf("viper instance is nil")
+		panic(ErrEmptyViper)
 	}
 	value := d.v.Get(key)
 	if value == nil {
@@ -42,7 +45,7 @@ func (d *Data) Get(key string) (any, error) {
 
 func (d *Data) Set(key string, value any) error {
 	if d.v == nil {
-		return fmt.Errorf("viper instance is nil")
+		panic(ErrEmptyViper)
 	}
 	d.v.Set(key, value)
 	return nil
@@ -50,7 +53,7 @@ func (d *Data) Set(key string, value any) error {
 
 func (d *Data) Delete(key string) error {
 	if d.v == nil {
-		return fmt.Errorf("viper instance is nil")
+		panic(ErrEmptyViper)
 	}
 	if !d.v.IsSet(key) {
 		return fmt.Errorf("key %s not found", key)
@@ -61,7 +64,7 @@ func (d *Data) Delete(key string) error {
 
 func (d *Data) Save() error {
 	if d.v == nil {
-		return fmt.Errorf("viper instance is nil")
+		panic(ErrEmptyViper)
 	}
 
 	if err := d.v.WriteConfig(); err != nil {
@@ -70,22 +73,40 @@ func (d *Data) Save() error {
 	return nil
 }
 
-func NewData(name string) (*Data, error) {
+func (d *Data) GetFilePath() string {
+	if d.v == nil {
+		panic(ErrEmptyViper)
+	}
+	return d.fp
+}
+
+func (d *Data) GetViper() *viper.Viper {
+	if d.v == nil {
+		panic(ErrEmptyViper)
+	}
+	return d.v
+}
+
+func (d *Data) Init(name string, path ...string) error {
 	tempDir := os.TempDir()
+	if len(path) > 0 {
+		tempDir = path[0]
+	}
 	filePath := filepath.Join(tempDir, name)
+	d.fp = filePath
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			// If the file does not exist, we can create a new viper instance
-			v := viper.New()
-			v.SetConfigFile(filePath)
-			v.AddConfigPath(tempDir)
-			return &Data{v: v}, nil
+			d.v = viper.New()
+			d.v.SetConfigFile(filePath)
+			d.v.AddConfigPath(tempDir)
+			return nil
 		}
-		return nil, fmt.Errorf("failed to read data from %s: %w", filePath, err)
+		return fmt.Errorf("failed to read data from %s: %w", filePath, err)
 	}
 	if len(data) == 0 {
-		return nil, fmt.Errorf("file %s is empty", filePath)
+		return fmt.Errorf("file %s is empty", filePath)
 	}
 	if data[len(data)-1] == '\n' {
 		data = data[:len(data)-1]
@@ -97,8 +118,8 @@ func NewData(name string) (*Data, error) {
 
 	err = v.ReadConfig(bytes.NewBuffer(data))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse JSON from %s: %w", filePath, err)
+		return fmt.Errorf("failed to parse JSON from %s: %w", filePath, err)
 	}
-
-	return &Data{v: v}, nil
+	d.v = v
+	return nil
 }

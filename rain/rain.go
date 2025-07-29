@@ -9,9 +9,23 @@ import (
 	"syscall"
 )
 
-func ExitIf(err error) {
-	if err != nil {
-		println(err.Error())
+func ExitIf(err any, args ...any) {
+	switch e := err.(type) {
+	case nil:
+		return
+	case error:
+		if e != nil {
+			fmt.Println(e.Error())
+			os.Exit(1)
+		}
+	case string:
+		if e != "" {
+			fmt.Printf(e, args...)
+			fmt.Println()
+			os.Exit(1)
+		}
+	default:
+		fmt.Printf("%+v\n", e)
 		os.Exit(1)
 	}
 }
@@ -26,13 +40,13 @@ func NeedHelp() bool {
 	return len(os.Args) == 2 && (os.Args[1] == "-h" || os.Args[1] == "--help")
 }
 
-// Return true if os.Stdin appears to be interactive
+// IsInteractive Return true if os.Stdin appears to be interactive
 func IsInteractive() bool {
 	fileInfo, err := os.Stdin.Stat()
 	if err != nil {
 		return false
 	}
-	return fileInfo.Mode()&(os.ModeCharDevice|os.ModeCharDevice) != 0
+	return fileInfo.Mode()&os.ModeCharDevice != 0
 }
 
 func OpenBrower(uri string) error {
@@ -48,4 +62,21 @@ func OpenBrower(uri string) error {
 	}
 	cmd := exec.Command(run, uri)
 	return cmd.Run()
+}
+
+func DebugArgs(strs ...string) {
+	if len(strs) == 0 {
+		return
+	}
+	os.Args = append([]string{os.Args[0]}, strs...)
+}
+
+func DebugEnvs(envs map[string]string) {
+	for k, v := range envs {
+		if v == "" {
+			os.Unsetenv(k)
+		} else {
+			os.Setenv(k, v)
+		}
+	}
 }
