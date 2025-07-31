@@ -22,7 +22,11 @@ type DataPath struct {
 // NewDataPath creates a new DataPath with the specified directory type and optional subdirectory.
 // If the directory does not exist, it will be created.
 // If subDir is empty, it uses the current working directory for DirCurrent or the system temp directory for DirTemp.
-func NewDataPath(t DirType, subDir string) *DataPath {
+func NewDataPath(t DirType, subDirObj ...string) *DataPath {
+	var subDir string
+	if len(subDirObj) > 0 {
+		subDir = subDirObj[0]
+	}
 	dp := &DataPath{}
 	if t < DirTemp || t > DirTarget {
 		rain.ExitIf(os.ErrInvalid)

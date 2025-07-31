@@ -100,7 +100,13 @@ func (d *Data) JSON() string {
 	return string(data)
 }
 
-func (d *Data) Init(name string, dPath *DataPath) error {
+func (d *Data) Init(name string, dPathObj ...DataPath) error {
+	var dPath *DataPath
+	if len(dPathObj) > 0 {
+		dPath = &dPathObj[0]
+	} else {
+		dPath = NewDataPath(DirTemp)
+	}
 	filePath := dPath.GetFilePath(name)
 	d.fp = filePath
 	data, err := os.ReadFile(filePath)
