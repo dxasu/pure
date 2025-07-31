@@ -2,9 +2,9 @@ package storage
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/viper"
 )
@@ -87,12 +87,21 @@ func (d *Data) GetViper() *viper.Viper {
 	return d.v
 }
 
-func (d *Data) Init(name string, path ...string) error {
-	tempDir := os.TempDir()
-	if len(path) > 0 {
-		tempDir = path[0]
-	}
-	filePath := filepath.Join(tempDir, name)
+func (d *Data) PrintJSON() {
+	j := d.v.AllSettings()
+	data, _ := json.MarshalIndent(j, "", "  ")
+	fmt.Println("\033[32mJson:\033[0m")
+	fmt.Println(string(data))
+}
+
+func (d *Data) JSON() string {
+	j := d.v.AllSettings()
+	data, _ := json.Marshal(j)
+	return string(data)
+}
+
+func (d *Data) Init(name string, dPath *DataPath) error {
+	filePath := dPath.GetFilePath(name)
 	d.fp = filePath
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -100,7 +109,7 @@ func (d *Data) Init(name string, path ...string) error {
 			// If the file does not exist, we can create a new viper instance
 			d.v = viper.New()
 			d.v.SetConfigFile(filePath)
-			d.v.AddConfigPath(tempDir)
+			d.v.AddConfigPath(dPath.GetDir())
 			return nil
 		}
 		return fmt.Errorf("failed to read data from %s: %w", filePath, err)

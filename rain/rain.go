@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"runtime"
+	"strings"
 	"syscall"
 
 	"github.com/gookit/color"
@@ -64,6 +65,13 @@ func OpenBrower(uri string) error {
 	}
 	cmd := exec.Command(run, uri)
 	return cmd.Run()
+}
+
+func DebugCmd(params string) {
+	if len(params) == 0 {
+		return
+	}
+	os.Args = append([]string{os.Args[0]}, strings.Fields(params)...)
 }
 
 func DebugArgs(strs ...string) {
