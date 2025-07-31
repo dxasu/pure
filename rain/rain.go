@@ -7,6 +7,8 @@ import (
 	"os/signal"
 	"runtime"
 	"syscall"
+
+	"github.com/gookit/color"
 )
 
 func ExitIf(err any, args ...any) {
@@ -79,4 +81,10 @@ func DebugEnvs(envs map[string]string) {
 			os.Setenv(k, v)
 		}
 	}
+}
+
+type Clog int
+
+func (c Clog) Str(s any) string {
+	return color.HEX(fmt.Sprintf("%x", c)).Sprint(s)
 }

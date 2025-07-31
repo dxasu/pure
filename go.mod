@@ -7,6 +7,7 @@ toolchain go1.24.1
 require (
 	github.com/atotto/clipboard v0.1.4
 	github.com/fatih/color v1.15.0
+	github.com/gookit/color v1.5.4
 	github.com/olekukonko/tablewriter v1.0.6
 	github.com/spf13/viper v1.20.1
 )
@@ -27,6 +28,7 @@ require (
 	github.com/spf13/cast v1.7.1 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
+	github.com/xo/terminfo v0.0.0-20210125001918-ca9a967f8778 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	golang.org/x/sys v0.29.0 // indirect
