@@ -1,6 +1,8 @@
 package rain
 
 import (
+	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -65,6 +67,21 @@ func OpenBrower(uri string) error {
 	}
 	cmd := exec.Command(run, uri)
 	return cmd.Run()
+}
+
+// Shell 执行 shell 脚本
+func Shell(ctx context.Context, input string) (string, error) {
+	cmd := exec.CommandContext(ctx, "bash", "-c", input)
+	buf := bytes.NewBuffer(make([]byte, 0, 1024))
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = buf
+	cmd.Stderr = buf
+
+	if err := cmd.Run(); err != nil {
+		errf := strings.TrimSpace(buf.String())
+		return "", fmt.Errorf("exec: %w (%q)", err, errf)
+	}
+	return buf.String(), nil
 }
 
 func DebugCmd(params string) {
