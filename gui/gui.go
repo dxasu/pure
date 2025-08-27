@@ -2,6 +2,7 @@ package gui
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -9,29 +10,9 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
+	widgetX "fyne.io/x/fyne/widget"
 	"github.com/spf13/cast"
 )
-
-type Mover interface {
-	Move(pos fyne.Position)
-}
-
-type Option struct {
-	Tag  string
-	X, Y int
-	Fn   func(string)
-}
-
-func Move(m Mover, _o ...Option) {
-	var o Option
-	if len(_o) > 0 {
-		o = _o[0]
-	}
-	if o.X == 0 && o.Y == 0 {
-		return
-	}
-	m.Move(fyne.NewPos(float32(o.X), float32(o.Y)))
-}
 
 type Gui struct {
 	fyne.Theme
@@ -39,10 +20,24 @@ type Gui struct {
 }
 
 type Win struct {
-	Title string
-	w, h  int
-	objs  []fyne.CanvasObject
-	Win   fyne.Window
+	Title    string
+	w, h     int
+	objs     []fyne.CanvasObject
+	Win      fyne.Window
+	startPos int // for merge start pos
+	gui      *Gui
+}
+
+type Callback func(string)
+
+type callPara []Callback
+
+func (_c callPara) fn() Callback {
+	var c Callback = func(string) {}
+	if len(_c) > 0 {
+		c = _c[0]
+	}
+	return c
 }
 
 func New() *Gui {
@@ -64,6 +59,7 @@ func (g *Gui) NewWin(title string, w, h int) Win {
 	myWindow := g.app.NewWindow(title)
 	myWindow.Resize(fyne.NewSize(float32(w), float32(h)))
 	window.Win = myWindow
+	window.gui = g
 	return window
 }
 
@@ -72,71 +68,140 @@ func (w *Win) Run() {
 	w.Win.ShowAndRun()
 }
 
-func (w *Win) AddButton(text string, _o ...Option) *widget.Button {
-	var o Option
-	if len(_o) > 0 {
-		o = _o[0]
-	}
-	button := widget.NewButton(text, func() { o.Fn("") })
-	Move(button, o)
+func (w *Win) AddButton(text string, _c ...Callback) *widget.Button {
+	button := widget.NewButton(text, func() { callPara(_c).fn()("") })
 	w.objs = append(w.objs, button)
 	return button
 }
 
-func (w *Win) AddLable(text string, _o ...Option) *widget.Label {
-	var o Option
-	if len(_o) > 0 {
-		o = _o[0]
-	}
+func (w *Win) AddSelect(options []string, _c ...Callback) *widget.Select {
+	selectW := widget.NewSelect(options, callPara(_c).fn())
+	w.objs = append(w.objs, selectW)
+	return selectW
+}
+
+// func (w *Win) AddSelectSearch(options []string, _c ...Callback) *fyne.Container {
+// 	combo := widgetX.NewNumericalEntry().SelectedText(items, func(s string) {})
+// 	w.objs = append(w.objs, c)
+// 	return c
+// }
+
+func (w *Win) AddSelectMulti(options []string, _c ...Callback) *widget.CheckGroup {
+	multiSelect := widget.NewCheckGroup(options, func(selected []string) {
+		callPara(_c).fn()(strings.Join(selected, ","))
+	})
+	w.objs = append(w.objs, multiSelect)
+	return multiSelect
+}
+
+func (w *Win) AddLable(text string) *widget.Label {
 	label := widget.NewLabel(text)
-	Move(label, o)
 	w.objs = append(w.objs, label)
 	return label
 }
 
-func (w *Win) AddInput(placeHolder string, multiLine bool, _o ...Option) *widget.Entry {
-	var o Option
-	if len(_o) > 0 {
-		o = _o[0]
-	}
+func (w *Win) AddInput(placeHolder string, multiLine bool, _c ...Callback) *widget.Entry {
 	entry := widget.NewEntry()
-	Move(entry, o)
 	entry.MultiLine = multiLine
 	if placeHolder != "" {
 		entry.SetPlaceHolder(placeHolder)
 	}
-	entry.OnChanged = o.Fn
+	entry.OnChanged = callPara(_c).fn()
 	w.objs = append(w.objs, entry)
 	return entry
 }
 
-func (w *Win) AddRadio(namelist []string, _o ...Option) *widget.RadioGroup {
-	var o Option
-	if len(_o) > 0 {
-		o = _o[0]
+func (w *Win) AddRadio(namelist []string, _c ...Callback) *widget.RadioGroup {
+	c := func(string) {}
+	if len(_c) > 0 {
+		c = _c[0]
 	}
-	radio := widget.NewRadioGroup(namelist, o.Fn)
-	Move(radio, o)
+	radio := widget.NewRadioGroup(namelist, c)
 	w.objs = append(w.objs, radio)
 	return radio
 }
 
-func (w *Win) AddCheck(text string, _o ...Option) *widget.Check {
-	var o Option
-	if len(_o) > 0 {
-		o = _o[0]
-	}
+func (w *Win) AddCheck(text string, _c ...Callback) *widget.Check {
 	check := widget.NewCheck(text, func(b bool) {
-		if o.Fn != nil {
-			o.Fn(cast.ToString(b))
-		}
+		callPara(_c).fn()(cast.ToString(b))
 	})
-	Move(check, o)
 	w.objs = append(w.objs, check)
 	return check
 }
 
-func (w *Win) Merge(count, col int) *fyne.Container {
+func (w *Win) AddSlider(min, max float64, _c ...Callback) *widget.Slider {
+	slider := widget.NewSlider(min, max)
+	slider.OnChanged = func(f float64) {
+		callPara(_c).fn()(cast.ToString(f))
+	}
+	w.objs = append(w.objs, slider)
+	return slider
+}
+
+func (w *Win) AddTimePicker(t time.Time, _c ...Callback) *widget.Entry {
+	entry := widget.NewEntry()
+	entry.SetPlaceHolder("2006-01-02 15:04:05")
+	entry.Text = t.Format("2006-01-02 15:04:05")
+	entry.OnChanged = callPara(_c).fn()
+	w.objs = append(w.objs, entry)
+	return entry
+}
+
+func (w *Win) AddDatePicker(t time.Time, _c ...Callback) *widget.Entry {
+	entry := widget.NewEntry()
+	entry.SetPlaceHolder("2006-01-02")
+	entry.Text = t.Format("2006-01-02")
+	entry.OnChanged = callPara(_c).fn()
+	w.objs = append(w.objs, entry)
+	return entry
+}
+
+func (w *Win) AddProgressBar() *widget.ProgressBar {
+	bar := widget.NewProgressBar()
+	w.objs = append(w.objs, bar)
+	return bar
+}
+
+func (w *Win) AddProgressBarInfinite() *widget.ProgressBarInfinite {
+	bar := widget.NewProgressBarInfinite()
+	w.objs = append(w.objs, bar)
+	return bar
+}
+
+func (w *Win) AddSeparator() *widget.Separator {
+	sep := widget.NewSeparator()
+	w.objs = append(w.objs, sep)
+	return sep
+}
+
+func (w *Win) AddNewLine() *widget.Label {
+	l := widget.NewLabel(" ")
+	w.objs = append(w.objs, l)
+	return l
+}
+
+func (w *Win) AddCalendar(f func(time.Time)) *widgetX.Calendar {
+	// var c *widget.Calendar
+	// c = widget.NewCalendar(time.Now(), func(t time.Time) {
+	// 	f(t)
+	// 	c.Hide()
+	// })
+	var c *widgetX.Calendar
+	c = widgetX.NewCalendar(time.Now(), func(t time.Time) {
+		f(t)
+		c.Hide()
+		c.Refresh()
+	})
+	w.objs = append(w.objs, c)
+	return c
+}
+
+func (w *Win) MergeMark() {
+	w.startPos = len(w.objs)
+}
+
+func (w *Win) Merge(col int) *fyne.Container {
+	count := len(w.objs) - w.startPos
 	if count > len(w.objs) {
 		panic(fmt.Errorf("too big for count: %d", count))
 	}
@@ -172,18 +237,6 @@ func (w *Win) Show(title, mkdownContent string, buttonName ...string) string {
 	w.Win.CenterOnScreen()
 	w.Win.Show()
 	return <-selected
-}
-
-func (w *Win) ShowModel(text string) {
-	content := widget.NewLabel(text)
-	popup := widget.NewModalPopUp(content, w.Win.Canvas())
-	popup.Show()
-}
-
-func (w *Win) ShowCalendar(d *time.Time) {
-	w.Win.SetContent(widget.NewCalendar(time.Now(), func(date time.Time) {
-		*d = date
-	}))
 }
 
 func (w *Win) ShowForm(list []*widget.FormItem) ([]string, bool) {

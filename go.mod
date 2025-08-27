@@ -6,6 +6,7 @@ toolchain go1.24.1
 
 require (
 	fyne.io/fyne/v2 v2.6.3
+	fyne.io/x/fyne v0.0.0-20250418202416-58a230ad1acb
 	github.com/atotto/clipboard v0.1.4
 	github.com/fatih/color v1.15.0
 	github.com/gookit/color v1.5.4
