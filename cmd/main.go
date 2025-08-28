@@ -36,9 +36,7 @@ func main() {
 		// w.Show("result", txt)
 		// w.ShowModel("hello world")
 
-		w.ShowToast(gui.ColorFormat(0xff00ff, "hello go") + gui.ColorFormat(0x00ffff, "world") +
-			"this is" + gui.ColorFormat(0xff0000, "toast") +
-			gui.ColorFormat(0x00ff00, "message") + "!")
+		w.ShowToast("hi,#ff0000hello#world.#00ff00ni好#to swiming#0000ffgo哈哈go😊#normal#toast")
 		// w.ShowCalendar(func(t time.Time) {
 		// 	fmt.Println("select date:", t)
 
