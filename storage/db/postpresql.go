@@ -7,18 +7,15 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var PostgreSQLDB *sql.DB
-
-func InitPostgreSQL(connStr string, maxOpenConns int) error {
-	var err error
-	PostgreSQLDB, err = sql.Open("postgres", connStr)
+func InitPostgreSQL(connStr string, maxOpenConns int) (*sql.DB, error) {
+	db, err := sql.Open("postgres", connStr)
 	if err != nil {
-		return fmt.Errorf("postgres open failed: %v", err)
+		return nil, fmt.Errorf("postgres open failed: %v", err)
 	}
 	// 配置连接池
-	PostgreSQLDB.SetMaxOpenConns(maxOpenConns)
-	if err = PostgreSQLDB.Ping(); err != nil {
-		return fmt.Errorf("postgres ping failed: %v", err)
+	db.SetMaxOpenConns(maxOpenConns)
+	if err = db.Ping(); err != nil {
+		return nil, fmt.Errorf("postgres ping failed: %v", err)
 	}
-	return nil
+	return db, nil
 }
